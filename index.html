@@ -1,24 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Split large SVG sewing patterns into printable tiled PDFs locally in your browser.">
   <title>SVG Pattern Splitter (Sewing Edition)</title>
 </head>
+
 <body class="bg-slate-50 min-h-screen font-sans text-slate-800 flex flex-col">
 
   <!-- Header -->
   <header class="bg-indigo-700 text-white p-4 shadow-lg z-10">
     <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
       <h1 class="text-xl font-bold flex items-center gap-3">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="6" cy="6" r="3" />
-          <circle cx="6" cy="18" r="3" />
-          <line x1="20" y1="4" x2="8.12" y2="15.88" />
-          <line x1="14.47" y1="14.48" x2="20" y2="20" />
-          <line x1="8.12" y1="8.12" x2="12" y2="12" />
-        </svg>
+        <img src="/navbar-icon.svg" class="h-8 w-8" alt="Pattern Splitter Logo" />
         <span>Pattern Splitter <span class="text-indigo-200 font-normal text-sm ml-2">Sewing Edition</span></span>
       </h1>
       <p class="text-indigo-100 text-xs mt-2 md:mt-0 opacity-80">Local processing. No uploads.</p>
@@ -31,22 +27,30 @@
       <!-- Step 1: Upload -->
       <section class="bg-white p-5 rounded-lg shadow-sm border border-slate-200 transition-all hover:shadow-md">
         <h2 class="font-bold text-lg mb-4 text-slate-700 flex items-center gap-2">
-          <span class="bg-indigo-100 text-indigo-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
+          <span
+            class="bg-indigo-100 text-indigo-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
           Load SVG
         </h2>
         <div id="uploadArea">
           <label class="block">
             <span class="sr-only">Choose SVG file</span>
-            <input type="file" id="fileInput" accept=".svg" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 file:cursor-pointer cursor-pointer hover:file:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"/>
+            <input type="file" id="fileInput" accept=".svg"
+              class="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 file:cursor-pointer cursor-pointer hover:file:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1" />
           </label>
         </div>
         <div id="fileInfo" class="mt-3 hidden">
           <div class="flex items-center justify-between bg-slate-50 p-2 rounded border border-slate-200">
             <div class="flex items-center gap-2 overflow-hidden">
-              <svg class="w-4 h-4 text-indigo-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              <svg class="w-4 h-4 text-indigo-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                </path>
+              </svg>
               <span id="fileName" class="font-mono text-xs text-slate-700 truncate" title="Loaded file"></span>
             </div>
-            <button id="clearFileBtn" class="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors" title="Remove file">
+            <button id="clearFileBtn"
+              class="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors"
+              title="Remove file">
               Clear
             </button>
           </div>
@@ -55,27 +59,35 @@
       <!-- Step 2: Configuration -->
       <section class="bg-white p-5 rounded-lg shadow-sm border border-slate-200 transition-all hover:shadow-md">
         <h2 class="font-bold text-lg mb-4 text-slate-700 flex items-center gap-2">
-          <span class="bg-indigo-100 text-indigo-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
+          <span
+            class="bg-indigo-100 text-indigo-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
           Paper Settings
         </h2>
         <div class="flex gap-2 mb-4" role="group" aria-label="Paper Presets">
-          <button id="presetA4" class="flex-1 py-1.5 px-2 bg-slate-50 hover:bg-slate-100 text-xs font-medium rounded border border-slate-200 transition-colors">A4</button>
-          <button id="presetLetter" class="flex-1 py-1.5 px-2 bg-slate-50 hover:bg-slate-100 text-xs font-medium rounded border border-slate-200 transition-colors">US Letter</button>
-          <button id="presetA0" class="flex-1 py-1.5 px-2 bg-slate-50 hover:bg-slate-100 text-xs font-medium rounded border border-slate-200 transition-colors">A0</button>
+          <button id="presetA4"
+            class="flex-1 py-1.5 px-2 bg-slate-50 hover:bg-slate-100 text-xs font-medium rounded border border-slate-200 transition-colors">A4</button>
+          <button id="presetLetter"
+            class="flex-1 py-1.5 px-2 bg-slate-50 hover:bg-slate-100 text-xs font-medium rounded border border-slate-200 transition-colors">US
+            Letter</button>
+          <button id="presetA0"
+            class="flex-1 py-1.5 px-2 bg-slate-50 hover:bg-slate-100 text-xs font-medium rounded border border-slate-200 transition-colors">A0</button>
         </div>
         <div class="grid grid-cols-2 gap-4 mb-4">
           <div>
             <label for="paperW" class="block text-xs font-medium text-slate-600 mb-1">Paper Width (mm)</label>
-            <input type="number" id="paperW" value="210" class="w-full p-2 border border-slate-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500">
+            <input type="number" id="paperW" value="210"
+              class="w-full p-2 border border-slate-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500">
           </div>
           <div>
             <label for="paperH" class="block text-xs font-medium text-slate-600 mb-1">Paper Height (mm)</label>
-            <input type="number" id="paperH" value="297" class="w-full p-2 border border-slate-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500">
+            <input type="number" id="paperH" value="297"
+              class="w-full p-2 border border-slate-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500">
           </div>
         </div>
         <div class="mb-5">
           <label for="margin" class="block text-xs font-medium text-slate-600 mb-1">Margin / Overlap (mm)</label>
-          <input type="number" id="margin" value="10" class="w-full p-2 border border-slate-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500">
+          <input type="number" id="margin" value="10"
+            class="w-full p-2 border border-slate-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500">
           <p class="text-[10px] text-slate-400 mt-1 leading-tight">
             Dotted lines will be drawn at this margin. Scale check lines will be drawn outside this margin.
           </p>
@@ -88,33 +100,52 @@
       <!-- Step 3: Action -->
       <section class="bg-white p-5 rounded-lg shadow-sm border border-slate-200 transition-all hover:shadow-md">
         <h2 class="font-bold text-lg mb-4 text-slate-700 flex items-center gap-2">
-          <span class="bg-indigo-100 text-indigo-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span>
+          <span
+            class="bg-indigo-100 text-indigo-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span>
           Export
         </h2>
-        <div id="loadingBar" class="hidden mb-3">
+        <div id="loadingBar" class="invisible mb-3">
           <div class="w-full bg-slate-200 rounded-full h-2">
-            <div id="progressBar" class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            <div id="progressBar" class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: 0%">
+            </div>
           </div>
           <p id="progressText" class="text-xs text-center mt-1 text-slate-500">Initializing...</p>
         </div>
-        <button id="btnExport" disabled class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded shadow-md transition-all active:transform active:scale-95 flex justify-center items-center gap-2">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+        <button id="btnExport" disabled
+          class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded shadow-md transition-all active:transform active:scale-95 flex justify-center items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+          </svg>
           Download Tiled PDF
         </button>
       </section>
     </aside>
     <!-- Preview Area -->
-    <section class="flex-1 bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[85vh] transition-all hover:shadow-md" aria-label="Visual Preview">
+    <section
+      class="flex-1 bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[85vh] transition-all hover:shadow-md"
+      aria-label="Visual Preview">
       <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-white z-10">
         <h2 class="font-bold text-slate-700 flex items-center gap-2">
-          <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+          <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z">
+            </path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+            </path>
+          </svg>
           Visual Preview
         </h2>
-        <div class="text-xs text-slate-500 flex items-center gap-3 bg-slate-50 px-2 py-1 rounded border border-slate-200">
+        <div
+          class="text-xs text-slate-500 flex items-center gap-3 bg-slate-50 px-2 py-1 rounded border border-slate-200">
           <span id="previewInfo" class="w-12 text-right font-mono font-medium">100%</span>
           <div class="flex gap-1">
-            <button id="zoomIn" class="w-6 h-6 flex items-center justify-center bg-white border rounded hover:bg-indigo-50 hover:text-indigo-600 transition-colors" aria-label="Zoom In">+</button>
-            <button id="zoomOut" class="w-6 h-6 flex items-center justify-center bg-white border rounded hover:bg-indigo-50 hover:text-indigo-600 transition-colors" aria-label="Zoom Out">-</button>
+            <button id="zoomIn"
+              class="w-6 h-6 flex items-center justify-center bg-white border rounded hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+              aria-label="Zoom In">+</button>
+            <button id="zoomOut"
+              class="w-6 h-6 flex items-center justify-center bg-white border rounded hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+              aria-label="Zoom Out">-</button>
           </div>
         </div>
       </div>
@@ -130,25 +161,22 @@
       </div>
     </section>
   </main>
-  <div
-    id="pwa-toast"
-    role="alert"
-    aria-labelledby="toast-message"
-  >
+  <div id="pwa-toast" role="alert" aria-labelledby="toast-message">
     <div class="message">
       <span id="toast-message"></span>
     </div>
     <div class="buttons">
-        <button id="pwa-refresh" type="button">
-          Reload
-        </button>
-        <button id="pwa-close" type="button">
-          Close
-        </button>
+      <button id="pwa-refresh" type="button">
+        Reload
+      </button>
+      <button id="pwa-close" type="button">
+        Close
+      </button>
     </div>
   </div>
   <!-- Hidden container for raw SVG processing -->
   <div id="hiddenContainer" style="position: absolute; top: -9999px; left: -9999px; visibility: hidden;"></div>
   <script type="module" src="/src/main.ts"></script>
 </body>
+
 </html>

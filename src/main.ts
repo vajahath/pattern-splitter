@@ -57,9 +57,9 @@ els.btnExport.addEventListener('click', generatePDF);
 
 // --- Core Logic ---
 function setPreset(type: 'a4' | 'letter' | 'a0') {
-	if(type === 'a4') { els.paperW.value = '210'; els.paperH.value = '297'; }
-	if(type === 'letter') { els.paperW.value = '215.9'; els.paperH.value = '279.4'; }
-	if(type === 'a0') { els.paperW.value = '841'; els.paperH.value = '1189'; }
+	if (type === 'a4') { els.paperW.value = '210'; els.paperH.value = '297'; }
+	if (type === 'letter') { els.paperW.value = '215.9'; els.paperH.value = '279.4'; }
+	if (type === 'a0') { els.paperW.value = '841'; els.paperH.value = '1189'; }
 	updateGridPreview();
 }
 
@@ -71,7 +71,7 @@ function zoomPreview(delta: number) {
 }
 
 function updatePreviewDimensions() {
-	if(!originalDisplayW) return;
+	if (!originalDisplayW) return;
 	const scaledW = originalDisplayW * previewScale;
 	const scaledH = originalDisplayH * previewScale;
 	els.wrapper.style.width = `${scaledW}px`;
@@ -136,7 +136,7 @@ async function handleFileUpload(e: Event) {
 	const scaleH = (containerH - 80) / originalDisplayH;
 	const scaleW = (containerW - 80) / originalDisplayW;
 	previewScale = Math.min(scaleH, scaleW, 1);
-	if(previewScale < 0.1) previewScale = 0.1;
+	if (previewScale < 0.1) previewScale = 0.1;
 	updatePreviewDimensions();
 	els.btnExport.disabled = false;
 	updateGridPreview();
@@ -202,7 +202,7 @@ function updateGridPreview() {
 			box.style.height = `${tilePctH}%`;
 			const label = document.createElement('span');
 			label.className = 'tile-label';
-			label.textContent = `${r+1}-${c+1}`;
+			label.textContent = `${r + 1}-${c + 1}`;
 			box.appendChild(label);
 			els.grid.appendChild(box);
 		}
@@ -211,7 +211,7 @@ function updateGridPreview() {
 
 async function generatePDF() {
 	if (!currentSvgText) return;
-	els.progress.classList.remove('hidden');
+	els.progress.classList.remove('invisible');
 	els.btnExport.disabled = true;
 	els.pText.textContent = "Loading PDF libraries...";
 	try {
@@ -229,10 +229,10 @@ async function generatePDF() {
 			}
 		};
 		const result = await generateTiledPDF(options);
-		els.progress.classList.add('hidden');
+		els.progress.classList.add('invisible');
 		els.btnExport.disabled = false;
 		// Download PDF
-		const fileName = els.fileName.textContent?.replace('.svg','') || 'pattern';
+		const fileName = els.fileName.textContent?.replace('.svg', '') || 'pattern';
 		const url = URL.createObjectURL(result.pdfBlob);
 		const a = document.createElement('a');
 		a.href = url;
@@ -246,7 +246,7 @@ async function generatePDF() {
 	} catch (err: any) {
 		console.error(err);
 		alert("Error: " + err.message);
-		els.progress.classList.add('hidden');
+		els.progress.classList.add('invisible');
 		els.btnExport.disabled = false;
 	}
 }
