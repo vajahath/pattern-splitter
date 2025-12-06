@@ -1,5 +1,5 @@
 import './style.css'
-import { initPWA } from './pwa.ts'
+import { initPWA, promptToInstall } from './pwa.ts'
 import { generateTiledPDF } from './pattern-splitter.ts'
 
 
@@ -243,6 +243,11 @@ async function generatePDF() {
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
 		}, 1000);
+
+		// Prompt for PWA Install
+		setTimeout(() => {
+			promptToInstall();
+		}, 2000);
 	} catch (err: any) {
 		console.error(err);
 		alert("Error: " + err.message);

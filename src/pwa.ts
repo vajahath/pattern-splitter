@@ -8,9 +8,14 @@ export function initPWA(app: Element) {
 
     let refreshSW: (reloadPage?: boolean) => Promise<void> | undefined
 
-    const refreshCallback = () => refreshSW?.(true)
+    const refreshCallback = () => {
+        pwaRefreshBtn.textContent = 'Reloading...';
+        pwaRefreshBtn.disabled = true;
+        refreshSW?.(true);
+        hidePwaToast(true);
+    }
 
-    function hidePwaToast (raf: boolean) {
+    function hidePwaToast(raf: boolean) {
         if (raf) {
             requestAnimationFrame(() => hidePwaToast(false))
             return
@@ -64,6 +69,80 @@ export function initPWA(app: Element) {
             },
         })
     })
+}
+
+// --- Install Prompt Logic ---
+let deferredPrompt: any = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent the mini-infobar from appearing on mobile
+    e.preventDefault();
+    // Stash the event so it can be triggered later.
+    deferredPrompt = e;
+});
+
+export function canInstall() {
+    return !!deferredPrompt;
+}
+
+export async function promptToInstall() {
+    if (!deferredPrompt) return;
+
+    // Re-use the Toast UI
+    const pwaToast = document.querySelector<HTMLDivElement>('#pwa-toast');
+    if (!pwaToast) return;
+
+    const pwaToastMessage = pwaToast.querySelector<HTMLDivElement>('.message #toast-message')!;
+    const pwaCloseBtn = pwaToast.querySelector<HTMLButtonElement>('#pwa-close')!;
+    const pwaRefreshBtn = pwaToast.querySelector<HTMLButtonElement>('#pwa-refresh')!;
+
+    // Backup original state
+    const originalMsg = pwaToastMessage.innerHTML;
+    const originalRefreshText = pwaRefreshBtn.textContent;
+    const originalCloseText = pwaCloseBtn.textContent;
+
+    // Update UI for Install
+    pwaToastMessage.innerHTML = 'Install this app for offline use?';
+    pwaRefreshBtn.textContent = 'Install';
+    pwaCloseBtn.textContent = 'Not now';
+
+    pwaToast.classList.add('show');
+    pwaToast.classList.add('install');
+
+    return new Promise<void>((resolve) => {
+        const cleanup = () => {
+            pwaToast.classList.remove('show');
+            pwaToast.classList.remove('install');
+            // Restore original text after transition
+            setTimeout(() => {
+                pwaToastMessage.innerHTML = originalMsg;
+                pwaRefreshBtn.textContent = originalRefreshText;
+                pwaCloseBtn.textContent = originalCloseText;
+            }, 300);
+
+            pwaRefreshBtn.removeEventListener('click', handleInstall);
+            pwaCloseBtn.removeEventListener('click', handleCancel);
+            resolve();
+        };
+
+        const handleInstall = async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    deferredPrompt = null;
+                }
+            }
+            cleanup();
+        };
+
+        const handleCancel = () => {
+            cleanup();
+        };
+
+        pwaRefreshBtn.addEventListener('click', handleInstall);
+        pwaCloseBtn.addEventListener('click', handleCancel);
+    });
 }
 
 /**

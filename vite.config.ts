@@ -6,17 +6,15 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [
     VitePWA({
-      registerType: "autoUpdate",
-      injectRegister: false,
-
+      registerType: "prompt",
       pwaAssets: {
         disabled: false,
         config: true,
       },
 
       manifest: {
-        name: "pattern-splitter",
-        short_name: "splitter",
+        name: "Pattern Splitter",
+        short_name: "Pattern Splitter",
         description:
           "This application is a web-based SVG pattern tiling tool that converts a single, oversized vector file into a multi-page, true-to-scale PDF for printing on standard home paper, complete with alignment marks, cut lines, and a scale ruler for accurate assembly",
         theme_color: "#4338ca",
