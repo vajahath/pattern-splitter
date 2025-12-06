@@ -8,6 +8,10 @@
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.17",
+    "tailwindcss": "^4.1.17"
+  },
   "devDependencies": {
     "@vite-pwa/assets-generator": "^1.0.2",
     "typescript": "~5.9.3",
