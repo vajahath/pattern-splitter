@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Split large SVG sewing patterns into printable tiled PDFs locally in your browser.">
+    <title>SVG Pattern Splitter (Sewing Edition)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen font-sans text-slate-800 flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-indigo-700 text-white p-4 shadow-lg z-10">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
+            <h1 class="text-xl font-bold flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="6" cy="6" r="3" />
+                    <circle cx="6" cy="18" r="3" />
+                    <line x1="20" y1="4" x2="8.12" y2="15.88" />
+                    <line x1="14.47" y1="14.48" x2="20" y2="20" />
+                    <line x1="8.12" y1="8.12" x2="12" y2="12" />
+                </svg>
+                <span>Pattern Splitter <span class="text-indigo-200 font-normal text-sm ml-2">Sewing Edition</span></span>
+            </h1>
+            <p class="text-indigo-100 text-xs mt-2 md:mt-0 opacity-80">Local processing. No uploads.</p>
+        </div>
+    </header>
+
+    <main class="flex-grow container mx-auto p-4 flex flex-col lg:flex-row gap-6 items-start">
+        
+        <!-- Controls Sidebar -->
+        <aside class="w-full lg:w-80 flex-shrink-0 space-y-5" aria-label="Settings Sidebar">
+            
+            <!-- Step 1: Upload -->
+            <section class="bg-white p-5 rounded-lg shadow-sm border border-slate-200 transition-all hover:shadow-md">
+                <h2 class="font-bold text-lg mb-4 text-slate-700 flex items-center gap-2">
+                    <span class="bg-indigo-100 text-indigo-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
+                    Load SVG
+                </h2>
+                
+                <div id="uploadArea">
+                    <label class="block">
+                        <span class="sr-only">Choose SVG file</span>
+                        <input type="file" id="fileInput" accept=".svg" class="block w-full text-sm text-slate-500
+                          file:mr-4 file:py-2.5 file:px-4
+                          file:rounded-full file:border-0
+                          file:text-sm file:font-semibold
+                          file:bg-indigo-50 file:text-indigo-700
+                          file:cursor-pointer cursor-pointer
+                          hover:file:bg-indigo-100
+                          focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1
+                        "/>
+                    </label>
+                </div>
+
+                <div id="fileInfo" class="mt-3 hidden">
+                    <div class="flex items-center justify-between bg-slate-50 p-2 rounded border border-slate-200">
+                        <div class="flex items-center gap-2 overflow-hidden">
+                            <svg class="w-4 h-4 text-indigo-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            <span id="fileName" class="font-mono text-xs text-slate-700 truncate" title="Loaded file"></span>
+                        </div>
+                        <button onclick="clearFile()" class="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors" title="Remove file">
+                            Clear
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 2: Configuration -->
+            <section class="bg-white p-5 rounded-lg shadow-sm border border-slate-200 transition-all hover:shadow-md">
+                <h2 class="font-bold text-lg mb-4 text-slate-700 flex items-center gap-2">
+                    <span class="bg-indigo-100 text-indigo-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
+                    Paper Settings
+                </h2>
+                
+                <div class="flex gap-2 mb-4" role="group" aria-label="Paper Presets">
+                    <button onclick="setPreset('a4')" class="flex-1 py-1.5 px-2 bg-slate-50 hover:bg-slate-100 text-xs font-medium rounded border border-slate-200 transition-colors">A4</button>
+                    <button onclick="setPreset('letter')" class="flex-1 py-1.5 px-2 bg-slate-50 hover:bg-slate-100 text-xs font-medium rounded border border-slate-200 transition-colors">US Letter</button>
+                    <button onclick="setPreset('a0')" class="flex-1 py-1.5 px-2 bg-slate-50 hover:bg-slate-100 text-xs font-medium rounded border border-slate-200 transition-colors">A0</button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="paperW" class="block text-xs font-medium text-slate-600 mb-1">Paper Width (mm)</label>
+                        <input type="number" id="paperW" value="210" class="w-full p-2 border border-slate-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label for="paperH" class="block text-xs font-medium text-slate-600 mb-1">Paper Height (mm)</label>
+                        <input type="number" id="paperH" value="297" class="w-full p-2 border border-slate-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <div class="mb-5">
+                    <label for="margin" class="block text-xs font-medium text-slate-600 mb-1">Margin / Overlap (mm)</label>
+                    <input type="number" id="margin" value="10" class="w-full p-2 border border-slate-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    <p class="text-[10px] text-slate-400 mt-1 leading-tight">
+                        Dotted lines will be drawn at this margin. Scale check lines will be drawn outside this margin.
+                    </p>
+                </div>
+
+                <div class="p-3 bg-amber-50 rounded border border-amber-100 text-xs text-amber-800">
+                    <strong>Estimated Layout:</strong>
+                    <div id="layoutStats" class="mt-1">Load an SVG to see stats.</div>
+                </div>
+            </section>
+
+            <!-- Step 3: Action -->
+            <section class="bg-white p-5 rounded-lg shadow-sm border border-slate-200 transition-all hover:shadow-md">
+                <h2 class="font-bold text-lg mb-4 text-slate-700 flex items-center gap-2">
+                    <span class="bg-indigo-100 text-indigo-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span>
+                    Export
+                </h2>
+                
+                <div id="loadingBar" class="hidden mb-3">
+                    <div class="w-full bg-slate-200 rounded-full h-2">
+                        <div id="progressBar" class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <p id="progressText" class="text-xs text-center mt-1 text-slate-500">Initializing...</p>
+                </div>
+
+                <button id="btnExport" onclick="generatePDF()" disabled class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded shadow-md transition-all active:transform active:scale-95 flex justify-center items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Download Tiled PDF
+                </button>
+            </section>
+
+        </aside>
+
+        <!-- Preview Area -->
+        <section class="flex-1 bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[85vh] transition-all hover:shadow-md" aria-label="Visual Preview">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-white z-10">
+                <h2 class="font-bold text-slate-700 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    Visual Preview
+                </h2>
+                <div class="text-xs text-slate-500 flex items-center gap-3 bg-slate-50 px-2 py-1 rounded border border-slate-200">
+                    <span id="previewInfo" class="w-12 text-right font-mono font-medium">100%</span>
+                    <div class="flex gap-1">
+                        <button onclick="zoomPreview(0.1)" class="w-6 h-6 flex items-center justify-center bg-white border rounded hover:bg-indigo-50 hover:text-indigo-600 transition-colors" aria-label="Zoom In">+</button>
+                        <button onclick="zoomPreview(-0.1)" class="w-6 h-6 flex items-center justify-center bg-white border rounded hover:bg-indigo-50 hover:text-indigo-600 transition-colors" aria-label="Zoom Out">-</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Scroll Container -->
+            <div class="relative w-full h-full overflow-auto bg-slate-100 p-8 flex custom-scrollbar" id="previewContainer">
+                <!-- Wrapper for content -->
+                <div id="previewWrapper" class="relative origin-top-left shadow-xl bg-white/0" style="width: 0; height: 0;">
+                    <!-- SVG will be injected here -->
+                    <div id="svgContainer" class="absolute top-0 left-0 w-full h-full"></div>
+                    <!-- Grid will be overlayed here -->
+                    <div id="gridOverlay" class="absolute top-0 left-0 w-full h-full pointer-events-none z-20"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Hidden container for raw SVG processing -->
+    <div id="hiddenContainer" style="position: absolute; top: -9999px; left: -9999px; visibility: hidden;"></div>
+
+    <script>
+        // --- Dependency Loader with Caching ---
+        async function loadScript(url) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = url;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        async function loadDependencies() {
+            // Check if libraries are already available in global scope (Cache check)
+            if (window.jspdf && window.svg2pdf) {
+                return true; 
+            }
+
+            try {
+                await loadScript('https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js');
+                await loadScript('https://unpkg.com/svg2pdf.js@2.2.4/dist/svg2pdf.umd.min.js');
+                return true;
+            } catch (e) {
+                console.error("Failed to load libraries", e);
+                return false;
+            }
+        }
+
+        // --- State ---
+        let currentSvg = null;
+        let svgWidthMM = 0;
+        let svgHeightMM = 0;
+        let previewScale = 0.2;
+        let originalDisplayW = 0;
+        let originalDisplayH = 0;
+        
+        // --- Constants ---
+        const PX_TO_MM = 25.4 / 96; 
+        
+        // --- DOM Elements ---
+        const els = {
+            input: document.getElementById('fileInput'),
+            container: document.getElementById('svgContainer'),
+            hiddenContainer: document.getElementById('hiddenContainer'),
+            grid: document.getElementById('gridOverlay'),
+            wrapper: document.getElementById('previewWrapper'),
+            stats: document.getElementById('layoutStats'),
+            paperW: document.getElementById('paperW'),
+            paperH: document.getElementById('paperH'),
+            margin: document.getElementById('margin'),
+            btnExport: document.getElementById('btnExport'),
+            progress: document.getElementById('loadingBar'),
+            bar: document.getElementById('progressBar'),
+            pText: document.getElementById('progressText'),
+            pInfo: document.getElementById('previewInfo'),
+            fileInfo: document.getElementById('fileInfo'),
+            fileName: document.getElementById('fileName')
+        };
+
+        // --- Event Listeners ---
+        els.input.addEventListener('change', handleFileUpload);
+        [els.paperW, els.paperH, els.margin].forEach(el => {
+            el.addEventListener('input', updateGridPreview);
+        });
+
+        // --- Core Logic ---
+
+        function setPreset(type) {
+            if(type === 'a4') { els.paperW.value = 210; els.paperH.value = 297; }
+            if(type === 'letter') { els.paperW.value = 215.9; els.paperH.value = 279.4; }
+            if(type === 'a0') { els.paperW.value = 841; els.paperH.value = 1189; }
+            updateGridPreview();
+        }
+
+        function zoomPreview(delta) {
+            if (!currentSvg) return;
+            const newScale = Math.max(0.05, previewScale + delta);
+            previewScale = newScale;
+            updatePreviewDimensions();
+        }
+
+        function updatePreviewDimensions() {
+            if(!originalDisplayW) return;
+            
+            const scaledW = originalDisplayW * previewScale;
+            const scaledH = originalDisplayH * previewScale;
+            
+            els.wrapper.style.width = `${scaledW}px`;
+            els.wrapper.style.height = `${scaledH}px`;
+            
+            els.pInfo.textContent = `${Math.round(previewScale * 100)}%`;
+        }
+
+        function clearFile() {
+            currentSvg = null;
+            els.input.value = '';
+            els.container.innerHTML = '';
+            els.grid.innerHTML = '';
+            els.wrapper.style.width = '0px';
+            els.wrapper.style.height = '0px';
+            els.stats.textContent = "Load an SVG to see stats.";
+            els.stats.className = "mt-1";
+            els.fileInfo.classList.add('hidden');
+            els.btnExport.disabled = true;
+            previewScale = 0.2;
+            els.pInfo.textContent = "100%";
+        }
+
+        async function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            els.fileName.textContent = file.name;
+            els.fileInfo.classList.remove('hidden');
+
+            const text = await file.text();
+            
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(text, "image/svg+xml");
+            const svgElement = doc.documentElement;
+
+            const scripts = svgElement.querySelectorAll('script');
+            scripts.forEach(s => s.remove());
+
+            // 1. Determine Dimensions (Physical Size) from attributes
+            const size = getSvgDimensionsInMM(svgElement);
+            svgWidthMM = size.w;
+            // Note: We don't trust the file attribute Height strictly anymore, 
+            // we will sync it with aspect ratio below.
+
+            // 2. Normalize ViewBox
+            if (!svgElement.hasAttribute('viewBox')) {
+                svgElement.setAttribute('viewBox', `0 0 ${size.w / PX_TO_MM} ${size.h / PX_TO_MM}`);
+            }
+            
+            const viewBox = svgElement.getAttribute('viewBox').split(/[\s,]+/).filter(Boolean).map(parseFloat);
+            const vbW = viewBox[2];
+            const vbH = viewBox[3];
+            const vbAspect = vbW / vbH;
+
+            // 3. FORCE Height to match ViewBox Aspect Ratio relative to Width
+            // This prevents "Layout Break" on zoom. 
+            // If the physical width is correct, the height MUST adhere to aspect ratio.
+            svgHeightMM = svgWidthMM / vbAspect;
+            
+            console.log(`Physical Size (Synced): ${svgWidthMM}mm x ${svgHeightMM}mm`);
+
+            // 4. Set display attributes
+            svgElement.setAttribute('width', '100%');
+            svgElement.setAttribute('height', '100%');
+            svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+            currentSvg = svgElement;
+
+            // Render Preview
+            els.container.innerHTML = '';
+            els.container.appendChild(svgElement.cloneNode(true));
+            
+            // 5. Calculate Wrapper Dimensions strictly based on ViewBox Ratio
+            originalDisplayW = svgWidthMM / PX_TO_MM;
+            originalDisplayH = originalDisplayW / vbAspect; 
+
+            // Initial Auto-Fit
+            const containerH = document.getElementById('previewContainer').offsetHeight;
+            const containerW = document.getElementById('previewContainer').offsetWidth;
+            
+            const scaleH = (containerH - 80) / originalDisplayH;
+            const scaleW = (containerW - 80) / originalDisplayW;
+            
+            previewScale = Math.min(scaleH, scaleW, 1);
+            if(previewScale < 0.1) previewScale = 0.1;
+
+            updatePreviewDimensions();
+
+            els.btnExport.disabled = false;
+            updateGridPreview();
+        }
+
+        function getSvgDimensionsInMM(svg) {
+            let w = svg.getAttribute('width');
+            let h = svg.getAttribute('height');
+            const viewBox = svg.getAttribute('viewBox');
+
+            const parseUnit = (val) => {
+                if (!val) return null;
+                val = val.toString().toLowerCase();
+                const num = parseFloat(val);
+                if (val.endsWith('mm')) return num;
+                if (val.endsWith('cm')) return num * 10;
+                if (val.endsWith('in')) return num * 25.4;
+                if (val.endsWith('pt')) return num * (25.4 / 72);
+                if (val.endsWith('pc')) return num * (25.4 / 6);
+                return num * PX_TO_MM; 
+            };
+
+            let widthMM = parseUnit(w);
+            let heightMM = parseUnit(h);
+
+            // Fallback to ViewBox if width/height missing
+            if ((!widthMM || !heightMM) && viewBox) {
+                const parts = viewBox.split(/[\s,]+/).filter(Boolean).map(parseFloat);
+                if (parts.length === 4) {
+                    if (!widthMM) widthMM = parts[2] * PX_TO_MM;
+                    if (!heightMM) heightMM = parts[3] * PX_TO_MM;
+                }
+            }
+
+            if (!widthMM) widthMM = 210; 
+            if (!heightMM) heightMM = 297;
+
+            return { w: widthMM, h: heightMM };
+        }
+
+        function updateGridPreview() {
+            if (!currentSvg) return;
+
+            const pW = parseFloat(els.paperW.value);
+            const pH = parseFloat(els.paperH.value);
+            const m = parseFloat(els.margin.value);
+
+            if (pW <= 0 || pH <= 0) return;
+
+            const usableW = pW - (2 * m);
+            const usableH = pH - (2 * m);
+
+            if (usableW <= 0 || usableH <= 0) {
+                els.stats.textContent = "Error: Margins larger than paper!";
+                els.stats.className = "mt-1 text-red-600 font-bold";
+                return;
+            }
+
+            const cols = Math.ceil(svgWidthMM / usableW);
+            const rows = Math.ceil(svgHeightMM / usableH);
+
+            els.stats.textContent = `Real Size: ${Math.round(svgWidthMM)}mm x ${Math.round(svgHeightMM)}mm. Creates ${cols * rows} tiles (${rows} rows x ${cols} cols).`;
+            els.stats.className = "mt-1 text-slate-700";
+
+            // --- REDRAW GRID ---
+            els.grid.innerHTML = '';
+            
+            // Grid calculations
+            const tilePctW = (usableW / svgWidthMM) * 100;
+            const tilePctH = (usableH / svgHeightMM) * 100;
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const box = document.createElement('div');
+                    box.className = 'grid-box';
+                    
+                    box.style.left = `${c * tilePctW}%`;
+                    box.style.top = `${r * tilePctH}%`;
+                    box.style.width = `${tilePctW}%`;
+                    box.style.height = `${tilePctH}%`;
+
+                    const label = document.createElement('span');
+                    label.className = 'tile-label';
+                    label.textContent = `${r+1}-${c+1}`;
+                    
+                    box.appendChild(label);
+                    els.grid.appendChild(box);
+                }
+            }
+        }
+
+        async function generatePDF() {
+            if (!currentSvg) return;
+            
+            els.progress.classList.remove('hidden');
+            els.btnExport.disabled = true;
+            els.pText.textContent = "Loading PDF libraries...";
+
+            const loaded = await loadDependencies();
+            if (!loaded) {
+                alert("Could not load PDF libraries.");
+                els.progress.classList.add('hidden');
+                els.btnExport.disabled = false;
+                return;
+            }
+
+            try {
+                const { jsPDF } = window.jspdf;
+                let svg2pdfFn = window.svg2pdf?.svg2pdf || window.svg2pdf;
+
+                const pW = parseFloat(els.paperW.value);
+                const pH = parseFloat(els.paperH.value);
+                const m = parseFloat(els.margin.value);
+                const usableW = pW - (2 * m);
+                const usableH = pH - (2 * m);
+
+                const cols = Math.ceil(svgWidthMM / usableW);
+                const rows = Math.ceil(svgHeightMM / usableH);
+                const totalTiles = cols * rows;
+
+                const doc = new jsPDF({
+                    orientation: pW > pH ? 'l' : 'p',
+                    unit: 'mm',
+                    format: [pW, pH]
+                });
+
+                // Extract ViewBox from original SVG
+                let originalViewBox = currentSvg.getAttribute('viewBox');
+                // Assume already normalized in handleFileUpload, but double check
+                const [vx, vy, vw, vh] = originalViewBox.split(/[\s,]+/).map(parseFloat);
+
+                // SCALE FACTOR: ViewBox Units per MM
+                const scaleX = vw / svgWidthMM;
+                const scaleY = vh / svgHeightMM;
+
+                const workContainer = document.getElementById('hiddenContainer');
+                let processedCount = 0;
+
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        
+                        if (r > 0 || c > 0) doc.addPage([pW, pH]);
+
+                        processedCount++;
+                        const pct = Math.round((processedCount / totalTiles) * 100);
+                        els.bar.style.width = `${pct}%`;
+                        els.pText.textContent = `Generating Tile ${r+1}-${c+1}...`;
+                        await new Promise(resolve => setTimeout(resolve, 5));
+
+                        // --- 1. Vector Clipping Strategy ---
+                        
+                        const startX_MM = c * usableW;
+                        const startY_MM = r * usableH;
+                        
+                        const tileVx = vx + (startX_MM * scaleX);
+                        const tileVy = vy + (startY_MM * scaleY);
+                        const tileVw = usableW * scaleX;
+                        const tileVh = usableH * scaleY;
+
+                        workContainer.innerHTML = '';
+                        const tileSvg = currentSvg.cloneNode(true);
+
+                        tileSvg.setAttribute('width', `${usableW}mm`);
+                        tileSvg.setAttribute('height', `${usableH}mm`);
+                        tileSvg.setAttribute('viewBox', `${tileVx} ${tileVy} ${tileVw} ${tileVh}`);
+
+                        await svg2pdfFn(tileSvg, doc, {
+                            x: m,
+                            y: m,
+                            width: usableW,
+                            height: usableH
+                        });
+
+                        // --- 2. Draw Physical Cut Lines ---
+                        doc.setDrawColor(150, 150, 150);
+                        doc.setLineWidth(0.2);
+                        doc.setLineDashPattern([3, 3], 0); 
+                        doc.rect(m, m, usableW, usableH); 
+
+                        // Labels & Marks
+                        doc.setFontSize(8);
+                        doc.setTextColor(150);
+                        doc.text(`Tile: ${r+1}-${c+1}`, m + 2, m + 4); 
+                        
+                        doc.setLineDashPattern([], 0); 
+                        
+                        // Define ROBUST Diamond Mark Function
+                        const markRadius = 2.5; // 5mm width/height total
+
+                        const drawDiamond = (centerX, centerY) => {
+                            doc.saveGraphicsState();
+                            doc.setDrawColor(0, 0, 0); // Black Stroke
+                            doc.setFillColor(50, 50, 50); // Dark Grey Fill for high visibility
+                            
+                            // Construct Path manually (Top, Right, Bottom, Left)
+                            doc.moveTo(centerX, centerY - markRadius);
+                            doc.lineTo(centerX + markRadius, centerY);
+                            doc.lineTo(centerX, centerY + markRadius);
+                            doc.lineTo(centerX - markRadius, centerY);
+                            doc.close();
+                            
+                            doc.fillStroke(); // Fill it and stroke it
+
+                            // Draw Crosshair (White, High Contrast)
+                            doc.setDrawColor(255, 255, 255); 
+                            doc.setLineWidth(0.3);
+                            
+                            // Horizontal Line
+                            doc.line(centerX - markRadius, centerY, centerX + markRadius, centerY);
+                            // Vertical Line
+                            doc.line(centerX, centerY - markRadius, centerX, centerY + markRadius);
+                            
+                            doc.restoreGraphicsState();
+                        };
+
+                        const midH = m + (usableH/2);
+                        const midW = m + (usableW/2);
+                        
+                        // Right Mark
+                        if (c < cols - 1) { 
+                            drawDiamond(m + usableW, midH);
+                        }
+                        // Left Mark
+                        if (c > 0) { 
+                            drawDiamond(m, midH);
+                        }
+                        // Bottom Mark
+                        if (r < rows - 1) { 
+                            drawDiamond(midW, m + usableH);
+                        }
+                        // Top Mark
+                        if (r > 0) { 
+                            drawDiamond(midW, m);
+                        }
+
+                        // --- 3. SCALE VERIFICATION LINES (Corner Ruler) ---
+                        // Position: Top-Left margin
+                        
+                        const verifyLen = 50; // 50mm = 5cm
+                        // Offset them so they don't touch
+                        const startX = 5; 
+                        const startY = 5;
+                        
+                        doc.setDrawColor(0, 0, 0); // Black
+                        doc.setLineWidth(0.2); // Thin precision line
+                        
+                        // Horizontal Line (Top)
+                        // Draws from (5,5) to (55,5)
+                        doc.line(startX, startY, startX + verifyLen, startY);
+                        // Vertical Ticks for Horizontal Line
+                        doc.line(startX, startY - 1.5, startX, startY + 1.5); // 0 mark
+                        doc.line(startX + verifyLen, startY - 1.5, startX + verifyLen, startY + 1.5); // 5cm mark
+                        
+                        // Vertical Line (Side) - MOVED DOWN to separate
+                        // Draws from (5, 10) to (5, 60)
+                        const vLineStartY = startY + 5; 
+                        doc.line(startX, vLineStartY, startX, vLineStartY + verifyLen);
+                        // Horizontal Ticks for Vertical Line
+                        doc.line(startX - 1.5, vLineStartY, startX + 1.5, vLineStartY); // 0 mark
+                        doc.line(startX - 1.5, vLineStartY + verifyLen, startX + 1.5, vLineStartY + verifyLen); // 5cm mark
+
+                        // Text Labels
+                        doc.setFontSize(7);
+                        doc.setTextColor(50);
+                        
+                        // Horizontal Label
+                        doc.text("5cm", startX + 20, startY - 2);
+                        
+                        // Vertical Label (Rotated 90 degrees)
+                        doc.text("5cm", startX - 2, vLineStartY + 35, { angle: 90 });
+                    }
+                }
+
+                workContainer.innerHTML = '';
+                doc.save(`${document.getElementById('fileName').textContent.replace('.svg','')}_tiled.pdf`);
+
+            } catch (err) {
+                console.error(err);
+                alert("Error: " + err.message);
+            } finally {
+                els.progress.classList.add('hidden');
+                els.btnExport.disabled = false;
+            }
+        }
+
+    </script>
+</body>
+</html>
