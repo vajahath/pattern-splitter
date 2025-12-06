@@ -1,6 +1,13 @@
-# Pattern Splitter
+# Pattern Splitter (Sewing Edition)
 
-A simple, browser-based tool to split large sewing pattern SVGs into printable A4, Letter, or A0 PDF tiles.
+![Deployment](https://github.com/vajahath/pattern-splitter/actions/workflows/deploy.yml/badge.svg)
+
+
+A simple, browser-based tool to split large sewing pattern SVGs into printable A4, Letter, A0 or custom size PDF tiles.
+
+> App: [https://vajahath.github.io/pattern-splitter/](https://vajahath.github.io/pattern-splitter/)
+
+![LightHouse](lighthouse.png)
 
 ![Pattern Splitter Screenshot](demo.webp)
 
