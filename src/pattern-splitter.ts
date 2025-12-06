@@ -183,6 +183,55 @@ export async function generateTiledPDF(options: PatternSplitterOptions): Promise
       pdf.text("5cm", startX + 20, startY - 2);
       // Vertical Label (Rotated 90 degrees)
       pdf.text("5cm", startX - 2, vLineStartY + 35, { angle: 90 });
+
+      // --- DIAMOND ALIGNMENT MARKS ---
+      // Helper function to draw diamond marks
+      const markRadius = 2.5; // 5mm width/height total
+      const drawDiamond = (centerX: number, centerY: number) => {
+        pdf.saveGraphicsState();
+        pdf.setDrawColor(0, 0, 0); // Black Stroke
+        pdf.setFillColor(50, 50, 50); // Dark Grey Fill for high visibility
+
+        // Construct Path manually (Top, Right, Bottom, Left)
+        pdf.moveTo(centerX, centerY - markRadius);
+        pdf.lineTo(centerX + markRadius, centerY);
+        pdf.lineTo(centerX, centerY + markRadius);
+        pdf.lineTo(centerX - markRadius, centerY);
+        pdf.close();
+
+        pdf.fillStroke(); // Fill it and stroke it
+
+        // Draw Crosshair (White, High Contrast)
+        pdf.setDrawColor(255, 255, 255);
+        pdf.setLineWidth(0.3);
+
+        // Horizontal Line
+        pdf.line(centerX - markRadius, centerY, centerX + markRadius, centerY);
+        // Vertical Line
+        pdf.line(centerX, centerY - markRadius, centerX, centerY + markRadius);
+
+        pdf.restoreGraphicsState();
+      };
+
+      const midH = margin + usableH / 2;
+      const midW = margin + usableW / 2;
+
+      // Right Mark
+      if (c < cols - 1) {
+        drawDiamond(margin + usableW, midH);
+      }
+      // Left Mark
+      if (c > 0) {
+        drawDiamond(margin, midH);
+      }
+      // Bottom Mark
+      if (r < rows - 1) {
+        drawDiamond(midW, margin + usableH);
+      }
+      // Top Mark
+      if (r > 0) {
+        drawDiamond(midW, margin);
+      }
     }
   }
 
