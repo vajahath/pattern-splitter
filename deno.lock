@@ -3,13 +3,14 @@
   "specifiers": {
     "npm:@tailwindcss/vite@^4.1.17": "4.1.17_vite@7.2.6__picomatch@4.0.3",
     "npm:@vite-pwa/assets-generator@^1.0.2": "1.0.2",
+    "npm:happy-dom@^20.0.11": "20.0.11",
     "npm:jspdf@^3.0.4": "3.0.4",
     "npm:svg2pdf.js@^2.6.0": "2.6.0_jspdf@3.0.4",
     "npm:tailwindcss@^4.1.17": "4.1.17",
     "npm:typescript@~5.9.3": "5.9.3",
     "npm:vite-plugin-pwa@^1.2.0": "1.2.0_@vite-pwa+assets-generator@1.0.2_vite@7.2.6__picomatch@4.0.3_workbox-build@7.4.0__ajv@8.17.1__@babel+core@7.28.5__rollup@2.79.2_workbox-window@7.4.0",
     "npm:vite@^7.2.6": "7.2.6_picomatch@4.0.3",
-    "npm:vitest@^4.0.15": "4.0.15_vite@7.2.6__picomatch@4.0.3",
+    "npm:vitest@^4.0.15": "4.0.15_vite@7.2.6__picomatch@4.0.3_happy-dom@20.0.11",
     "npm:workbox-window@^7.4.0": "7.4.0"
   },
   "npm": {
@@ -1436,6 +1437,12 @@
     "@types/estree@1.0.8": {
       "integrity": "sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w=="
     },
+    "@types/node@20.19.25": {
+      "integrity": "sha512-ZsJzA5thDQMSQO788d7IocwwQbI8B5OPzmqNvpf3NY/+MHDAS759Wo0gd2WQeXYt5AAAQjzcrTVC6SKCuYgoCQ==",
+      "dependencies": [
+        "undici-types"
+      ]
+    },
     "@types/pako@2.0.4": {
       "integrity": "sha512-VWDCbrLeVXJM9fihYodcLiIv0ku+AlOa/TQ1SvYOaBuyrSKgEcro95LJyIsJ4vSo6BXIxOKxiJAat04CmST9Fw=="
     },
@@ -1447,6 +1454,9 @@
     },
     "@types/trusted-types@2.0.7": {
       "integrity": "sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw=="
+    },
+    "@types/whatwg-mimetype@3.0.2": {
+      "integrity": "sha512-c2AKvDT8ToxLIOUlN51gTiHXflsfIFisS4pO7pDPoKouJCESkhZnEy623gwP9laCy5lnLDAw1vAzu2vM2YLOrA=="
     },
     "@vite-pwa/assets-generator@1.0.2": {
       "integrity": "sha512-MCbrb508JZHqe7bUibmZj/lyojdhLRnfkmyXnkrCM2zVrjTgL89U8UEfInpKTvPeTnxsw2hmyZxnhsdNR6yhwg==",
@@ -2147,6 +2157,14 @@
     },
     "graceful-fs@4.2.11": {
       "integrity": "sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ=="
+    },
+    "happy-dom@20.0.11": {
+      "integrity": "sha512-QsCdAUHAmiDeKeaNojb1OHOPF7NjcWPBR7obdu3NwH2a/oyQaLg5d0aaCy/9My6CdPChYF07dvz5chaXBGaD4g==",
+      "dependencies": [
+        "@types/node",
+        "@types/whatwg-mimetype",
+        "whatwg-mimetype"
+      ]
     },
     "has-bigints@1.1.0": {
       "integrity": "sha512-R3pbpkcIqv2Pm3dUwgjclDRVmWpTJW2DcMzcIhEXEx1oh/CEMObMm3KLmRJOdvhM7o4uQBnwr8pzRK2sJWIqfg=="
@@ -3223,6 +3241,9 @@
         "unconfig-core"
       ]
     },
+    "undici-types@6.21.0": {
+      "integrity": "sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ=="
+    },
     "unicode-canonical-property-names-ecmascript@2.0.1": {
       "integrity": "sha512-dA8WbNeb2a6oQzAQ55YlT5vQAWGV9WXOsi3SskE3bcCdM0P4SDd+24zS/OCacdRq5BkdsRj9q3Pg6YyQoxIGqg=="
     },
@@ -3322,8 +3343,41 @@
       ],
       "bin": true
     },
+    "vitest@4.0.15_vite@7.2.6__picomatch@4.0.3_happy-dom@20.0.11": {
+      "integrity": "sha512-n1RxDp8UJm6N0IbJLQo+yzLZ2sQCDyl1o0LeugbPWf8+8Fttp29GghsQBjYJVmWq3gBFfe9Hs1spR44vovn2wA==",
+      "dependencies": [
+        "@vitest/expect",
+        "@vitest/mocker",
+        "@vitest/pretty-format",
+        "@vitest/runner",
+        "@vitest/snapshot",
+        "@vitest/spy",
+        "@vitest/utils",
+        "es-module-lexer",
+        "expect-type",
+        "happy-dom",
+        "magic-string@0.30.21",
+        "obug",
+        "pathe",
+        "picomatch@4.0.3",
+        "std-env",
+        "tinybench",
+        "tinyexec",
+        "tinyglobby",
+        "tinyrainbow",
+        "vite",
+        "why-is-node-running"
+      ],
+      "optionalPeers": [
+        "happy-dom"
+      ],
+      "bin": true
+    },
     "webidl-conversions@4.0.2": {
       "integrity": "sha512-YQ+BmxuTgd6UXZW3+ICGfyqRyHXVlD5GtQr5+qjiNW7bF0cqrzX500HVXPBOvgXb5YnzDd+h0zqyv61KUD7+Sg=="
+    },
+    "whatwg-mimetype@3.0.0": {
+      "integrity": "sha512-nt+N2dzIutVRxARx1nghPKGv1xHikU7HKdfafKkLNLindmPU/ch3U31NOCGGA/dmPcmb1VlofO0vnKAcsm0o/Q=="
     },
     "whatwg-url@7.1.0": {
       "integrity": "sha512-WUu7Rg1DroM7oQvGWfOiAK21n74Gg+T4elXEQYkOhtyLeWiJFoOGLXPKI/9gzIie9CtwVLm8wtw6YJdKyxSjeg==",
@@ -3562,6 +3616,7 @@
       "dependencies": [
         "npm:@tailwindcss/vite@^4.1.17",
         "npm:@vite-pwa/assets-generator@^1.0.2",
+        "npm:happy-dom@^20.0.11",
         "npm:jspdf@^3.0.4",
         "npm:svg2pdf.js@^2.6.0",
         "npm:tailwindcss@^4.1.17",

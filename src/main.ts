@@ -1,6 +1,6 @@
 import './style.css'
 import { initPWA, promptToInstall } from './pwa.ts'
-import { generateTiledPDF } from './pattern-splitter.ts'
+import { generateTiledPDF, getSvgDimensionsInMM, PX_TO_MM } from './pattern-splitter.ts'
 
 
 initPWA(document.body)
@@ -14,7 +14,7 @@ let previewScale = 0.2;
 let originalDisplayW = 0;
 let originalDisplayH = 0;
 
-const PX_TO_MM = 25.4 / 96;
+
 
 // --- DOM Elements ---
 const els = {
@@ -142,34 +142,7 @@ async function handleFileUpload(e: Event) {
 	updateGridPreview();
 }
 
-function getSvgDimensionsInMM(svg: SVGElement): { w: number; h: number } {
-	let w = svg.getAttribute('width');
-	let h = svg.getAttribute('height');
-	const viewBox = svg.getAttribute('viewBox');
-	function parseUnit(val: string | null): number | null {
-		if (!val) return null;
-		val = val.toLowerCase();
-		const num = parseFloat(val);
-		if (val.endsWith('mm')) return num;
-		if (val.endsWith('cm')) return num * 10;
-		if (val.endsWith('in')) return num * 25.4;
-		if (val.endsWith('pt')) return num * (25.4 / 72);
-		if (val.endsWith('pc')) return num * (25.4 / 6);
-		return num * PX_TO_MM;
-	}
-	let widthMM = parseUnit(w);
-	let heightMM = parseUnit(h);
-	if ((!widthMM || !heightMM) && viewBox) {
-		const parts = viewBox.split(/\s|,/).filter(Boolean).map(parseFloat);
-		if (parts.length === 4) {
-			if (!widthMM) widthMM = parts[2] * PX_TO_MM;
-			if (!heightMM) heightMM = parts[3] * PX_TO_MM;
-		}
-	}
-	if (!widthMM) widthMM = 210;
-	if (!heightMM) heightMM = 297;
-	return { w: widthMM, h: heightMM };
-}
+
 
 function updateGridPreview() {
 	if (!currentSvgElement) return;

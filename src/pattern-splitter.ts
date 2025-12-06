@@ -18,9 +18,9 @@ export type PatternSplitterResult = {
   pdfBlob: Blob;
 };
 
-const PX_TO_MM = 25.4 / 96;
+export const PX_TO_MM = 25.4 / 96;
 
-function parseUnit(val: string | null): number | null {
+export function parseUnit(val: string | null): number | null {
   if (!val) return null;
   val = val.toLowerCase();
   const num = parseFloat(val);
@@ -32,7 +32,7 @@ function parseUnit(val: string | null): number | null {
   return num * PX_TO_MM;
 }
 
-function getSvgDimensionsInMM(svg: SVGElement): { w: number; h: number } {
+export function getSvgDimensionsInMM(svg: SVGElement): { w: number; h: number } {
   let w = svg.getAttribute('width');
   let h = svg.getAttribute('height');
   const viewBox = svg.getAttribute('viewBox');
