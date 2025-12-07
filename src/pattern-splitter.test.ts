@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { parseUnit, getSvgDimensionsInMM, generateTiledPDF } from './pattern-splitter';
+import { parseUnit, getSvgDimensionsInMM, generateTiledPDF, getTileBorderInstructions } from './pattern-splitter';
 import type { PatternSplitterOptions } from './pattern-splitter';
 
 // Hoist mocks to ensure they are available before imports/mocks
@@ -15,6 +15,9 @@ const mocks = vi.hoisted(() => {
         setTextColor: vi.fn(),
         text: vi.fn(),
         line: vi.fn(),
+        circle: vi.fn(),
+        triangle: vi.fn(),
+        getTextWidth: vi.fn().mockReturnValue(10), // Mock width
         saveGraphicsState: vi.fn(),
         restoreGraphicsState: vi.fn(),
         setFillColor: vi.fn(),
@@ -41,6 +44,9 @@ vi.mock('jspdf', () => {
                 setTextColor: mocks.setTextColor,
                 text: mocks.text,
                 line: mocks.line,
+                circle: mocks.circle,
+                triangle: mocks.triangle,
+                getTextWidth: mocks.getTextWidth,
                 saveGraphicsState: mocks.saveGraphicsState,
                 restoreGraphicsState: mocks.restoreGraphicsState,
                 setFillColor: mocks.setFillColor,
@@ -112,6 +118,71 @@ describe('Pattern Splitter', () => {
         });
     });
 
+    describe('getTileBorderInstructions', () => {
+        it('should return all none for 1x1 grid', () => {
+            const instr = getTileBorderInstructions(0, 0, 1, 1);
+            expect(instr).toEqual({ top: 'none', right: 'none', bottom: 'none', left: 'none' });
+        });
+
+        it('should handle 2x2 grid correctly', () => {
+            // Tile 1-1 (0,0): Top-Left
+            expect(getTileBorderInstructions(0, 0, 2, 2)).toEqual({
+                top: 'none', right: 'glue', bottom: 'glue', left: 'none'
+            });
+            // Tile 1-2 (0,1): Top-Right
+            expect(getTileBorderInstructions(0, 1, 2, 2)).toEqual({
+                top: 'none', right: 'none', bottom: 'glue', left: 'cut'
+            });
+            // Tile 2-1 (1,0): Bottom-Left
+            expect(getTileBorderInstructions(1, 0, 2, 2)).toEqual({
+                top: 'cut', right: 'glue', bottom: 'none', left: 'none'
+            });
+            // Tile 2-2 (1,1): Bottom-Right
+            expect(getTileBorderInstructions(1, 1, 2, 2)).toEqual({
+                top: 'cut', right: 'none', bottom: 'none', left: 'cut'
+            });
+        });
+
+        it('should handle 3x3 middle tile correctly', () => {
+            // Middle tile (1,1) in 3x3
+            expect(getTileBorderInstructions(1, 1, 3, 3)).toEqual({
+                top: 'cut', right: 'glue', bottom: 'glue', left: 'cut'
+            });
+        });
+
+        it('should handle 1xN strip (horizontal)', () => {
+            // 1 row, 3 cols
+            // First
+            expect(getTileBorderInstructions(0, 0, 1, 3)).toEqual({
+                top: 'none', right: 'glue', bottom: 'none', left: 'none'
+            });
+            // Middle
+            expect(getTileBorderInstructions(0, 1, 1, 3)).toEqual({
+                top: 'none', right: 'glue', bottom: 'none', left: 'cut'
+            });
+            // Last
+            expect(getTileBorderInstructions(0, 2, 1, 3)).toEqual({
+                top: 'none', right: 'none', bottom: 'none', left: 'cut'
+            });
+        });
+
+        it('should handle Nx1 strip (vertical)', () => {
+            // 3 rows, 1 col
+            // First
+            expect(getTileBorderInstructions(0, 0, 3, 1)).toEqual({
+                top: 'none', right: 'none', bottom: 'glue', left: 'none'
+            });
+            // Middle
+            expect(getTileBorderInstructions(1, 0, 3, 1)).toEqual({
+                top: 'cut', right: 'none', bottom: 'glue', left: 'none'
+            });
+            // Last
+            expect(getTileBorderInstructions(2, 0, 3, 1)).toEqual({
+                top: 'cut', right: 'none', bottom: 'none', left: 'none'
+            });
+        });
+    });
+
     describe('generateTiledPDF', () => {
         beforeEach(() => {
             vi.clearAllMocks();
@@ -177,6 +248,53 @@ describe('Pattern Splitter', () => {
 
             await generateTiledPDF(options);
             expect(onProgress).toHaveBeenCalled();
+        });
+        it('should add cut/glue annotations to PDF', async () => {
+            // 2x2 grid
+            const svgText = '<svg width="400mm" height="400mm" viewBox="0 0 400 400"></svg>';
+            const options: PatternSplitterOptions = {
+                svgText,
+                paperWidth: 210,
+                paperHeight: 297,
+                margin: 10,
+            };
+
+            await generateTiledPDF(options);
+
+            // We expect some calls to text with [glue] and [cut out]
+            // Tile 1-1 (Right: Glue, Bottom: Glue)
+            // Tile 1-2 (Left: Cut, Bottom: Glue)
+            // Tile 2-1 (Right: Glue, Top: Cut)
+            // Tile 2-2 (Left: Cut, Top: Cut)
+
+            const textCalls = mocks.text.mock.calls.map(c => c[0]); // First arg is text
+
+            expect(textCalls).toContain('[glue]');
+            expect(textCalls).toContain('[cut out]');
+
+            // Should be present multiple times. 
+            // 2x2 grid:
+            // Right glue: Tile 1-1, Tile 2-1 (2 times)
+            // Bottom glue: Tile 1-1, Tile 1-2 (2 times)
+            // Top cut: Tile 2-1, Tile 2-2 (2 times)
+            // Left cut: Tile 1-2, Tile 2-2 (2 times)
+
+            const glueCount = textCalls.filter(t => t === '[glue]').length;
+            const cutCount = textCalls.filter(t => t === '[cut out]').length;
+
+            expect(glueCount).toBeGreaterThanOrEqual(4);
+            expect(cutCount).toBeGreaterThanOrEqual(4);
+        });
+        it('should throw error if margin is less than 10mm', async () => {
+            const svgText = '<svg width="100mm" height="100mm" viewBox="0 0 100 100"></svg>';
+            const options: PatternSplitterOptions = {
+                svgText,
+                paperWidth: 210,
+                paperHeight: 297,
+                margin: 9, // Too small
+            };
+
+            await expect(generateTiledPDF(options)).rejects.toThrow('Margin must be at least 10mm');
         });
     });
 });

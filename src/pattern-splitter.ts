@@ -20,6 +20,56 @@ export type PatternSplitterResult = {
 
 export const PX_TO_MM = 25.4 / 96;
 
+export type BorderInstruction = 'glue' | 'cut' | 'none';
+
+export type TileBorderInstructions = {
+  top: BorderInstruction;
+  right: BorderInstruction;
+  bottom: BorderInstruction;
+  left: BorderInstruction;
+};
+
+/**
+ * Determines cut/glue instructions for a tile based on its position in the grid.
+ * 
+ * Strategy:
+ * - We overlap to the right and down.
+ * - This means for any tile:
+ *   - LEFT border: If col > 0, we CUT (to overlap the previous tile).
+ *   - TOP border: If row > 0, we CUT (to overlap the previous tile).
+ *   - RIGHT border: If col < last, we GLUE (so the next tile can overlap us).
+ *   - BOTTOM border: If row < last, we GLUE (so the next tile can overlap us).
+ * 
+ * Exceptions:
+ * - Edges of the entire mosaic have 'none' (except manual trimming, but no overlap logic).
+ */
+export function getTileBorderInstructions(
+  row: number,
+  col: number,
+  totalRows: number,
+  totalCols: number
+): TileBorderInstructions {
+  // 0-based indices
+  const isFirstRow = row === 0;
+  const isLastRow = row === totalRows - 1;
+  const isFirstCol = col === 0;
+  const isLastCol = col === totalCols - 1;
+
+  return {
+    // If not first row, we cut top to overlap the one above.
+    top: isFirstRow ? 'none' : 'cut',
+
+    // If not last col, we leave glue area for the one to the right.
+    right: isLastCol ? 'none' : 'glue',
+
+    // If not last row, we leave glue area for the one below.
+    bottom: isLastRow ? 'none' : 'glue',
+
+    // If not first col, we cut left to overlap the one to the left.
+    left: isFirstCol ? 'none' : 'cut',
+  };
+}
+
 export function parseUnit(val: string | null): number | null {
   if (!val) return null;
   val = val.toLowerCase();
@@ -57,6 +107,11 @@ export function getSvgDimensionsInMM(svg: SVGElement): { w: number; h: number } 
 export async function generateTiledPDF(options: PatternSplitterOptions): Promise<PatternSplitterResult> {
   const { svgText, paperWidth, paperHeight, margin, onProgress } = options;
 
+  if (margin < 10) {
+    throw new Error('Margin must be at least 10mm for proper labeling.');
+  }
+
+  console.log('Generating PDF...', options);
   // Dynamic imports
   const { jsPDF } = await import('jspdf');
   const svg2pdfModule = await import("svg2pdf.js");
@@ -231,6 +286,132 @@ export async function generateTiledPDF(options: PatternSplitterOptions): Promise
       // Top Mark
       if (r > 0) {
         drawDiamond(midW, margin);
+      }
+
+      // --- BORDER ANNOTATIONS (Cut / Glue) ---
+      const borderInstr = getTileBorderInstructions(r, c, rows, cols);
+      pdf.setFontSize(7);
+      pdf.setTextColor(100, 100, 100); // Grey
+
+      // Helper to draw centered text with icon in margin
+      const drawLabelWithIcon = (type: BorderInstruction, x: number, y: number, angle: number = 0, iconOffsetX: number = 0, iconOffsetY: number = 0) => {
+        const text = labelMap[type];
+        if (!text || type === 'none') return;
+
+        // Draw text using jsPDF's built-in rotation support
+        pdf.text(text, x, y, { align: "center", angle });
+
+        // Draw Icon - Use manual trigonometry for rotation
+        const w = pdf.getTextWidth(text);
+        const iconGap = 3;
+        // Local position of icon center relative to text anchor
+        const localX = w / 2 + iconGap + iconOffsetX;  // Apply icon offset
+        const localY = -1 + iconOffsetY;  // Apply icon offset
+
+        // Convert angle to radians
+        const rad = (angle * Math.PI) / 180;
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+
+        // Transform local icon center to absolute coordinates
+        const iconCenterX = x + (localX * cos - localY * sin);
+        const iconCenterY = y + (localX * sin + localY * cos);
+
+        // Helper to transform icon-relative coordinates to absolute
+        const toAbs = (ix: number, iy: number) => ({
+          x: iconCenterX + (ix * cos - iy * sin),
+          y: iconCenterY + (ix * sin + iy * cos)
+        });
+
+        pdf.setLineWidth(0.2);
+
+        if (type === 'cut') {
+          // Scissors ✂️
+          const r = 0.6;
+          // Top handle
+          const h1 = toAbs(-1.5, -0.8);
+          pdf.circle(h1.x, h1.y, r, 'S');
+          // Bottom handle
+          const h2 = toAbs(-1.5, 0.8);
+          pdf.circle(h2.x, h2.y, r, 'S');
+          // Blade 1
+          const b1a = toAbs(-1.0, -0.8);
+          const b1b = toAbs(2.0, 0.8);
+          pdf.line(b1a.x, b1a.y, b1b.x, b1b.y);
+          // Blade 2
+          const b2a = toAbs(-1.0, 0.8);
+          const b2b = toAbs(2.0, -0.8);
+          pdf.line(b2a.x, b2a.y, b2b.x, b2b.y);
+        } else if (type === 'glue') {
+          // Glue Drop 💧
+          pdf.setFillColor(150, 150, 150);
+          // Circle part
+          const c = toAbs(0, 0.5);
+          pdf.circle(c.x, c.y, 1.2, 'F');
+          // Triangle part
+          const t1 = toAbs(0, -2);
+          const t2 = toAbs(-1.1, 0.6);
+          const t3 = toAbs(1.1, 0.6);
+          pdf.triangle(t1.x, t1.y, t2.x, t2.y, t3.x, t3.y, 'F');
+        }
+      };
+
+      const labelMap: Record<BorderInstruction, string> = {
+        glue: "[ GLUE ]",
+        cut: "[ CUT  OUT ]",
+        none: ""
+      };
+
+      // Robust Geometry with Manual Micro-Adjustments:
+      // Place labels perpendicularly adjacent to the diamond except left/right which are manually tweaked.
+      // Diamond Radius = 2.5mm
+      // Base Gap = 1.0mm (approx)
+      const dist = 3.5;
+
+      // MANUAL ADJUSTMENT VARIABLES - Adjust these to fine-tune left/right label positions
+      // Left Side (90° rotation)
+      const leftLabelOffsetX = 7;  // Horizontal offset for left label position
+      const leftLabelOffsetY = 7;    // Vertical offset for left label position
+      const leftIconOffsetX = -28;     // Horizontal offset for left icon (relative to text)
+      const leftIconOffsetY = 9;     // Vertical offset for left icon (relative to text)
+
+      // Right Side (270° rotation)
+      const rightLabelOffsetX = 5.5; // Horizontal offset for right label position
+      const rightLabelOffsetY = -5;     // Vertical offset for right label position
+      const rightIconOffsetX = -20;      // Horizontal offset for right icon (relative to text)
+      const rightIconOffsetY = -3;      // Vertical offset for right icon (relative to text)
+
+      // Top
+      if (borderInstr.top !== 'none') {
+        // x = midW (Centered on diamond)
+        // y = margin - dist (Above diamond)
+        drawLabelWithIcon(borderInstr.top, midW, margin - dist);
+      }
+
+      // Right
+      if (borderInstr.right !== 'none') {
+        // x = rightBorder + dist (Right of diamond)
+        // y = midH (Centered on diamond)
+        // Angle 270 (Top of letters points LEFT towards content, Bottom points RIGHT away)
+        // Using manual adjustment variables
+        drawLabelWithIcon(borderInstr.right, margin + usableW + dist + rightLabelOffsetX, midH + rightLabelOffsetY, 270, rightIconOffsetX, rightIconOffsetY);
+      }
+
+      // Bottom
+      if (borderInstr.bottom !== 'none') {
+        // x = midW (Centered on diamond)
+        // y = bottomBorder + dist + textHeightAdjustment
+        // Note: PDF text origin is baseline. We need to shift down by font height approx (2mm)
+        drawLabelWithIcon(borderInstr.bottom, midW, margin + usableH + dist + 2);
+      }
+
+      // Left
+      if (borderInstr.left !== 'none') {
+        // x = leftBorder - dist (Left of diamond)
+        // y = midH (Centered on diamond)
+        // Angle 90 (Top of letters points LEFT away, Bottom points RIGHT towards content)
+        // Using manual adjustment variables
+        drawLabelWithIcon(borderInstr.left, margin - dist + leftLabelOffsetX, midH + leftLabelOffsetY, 90, leftIconOffsetX, leftIconOffsetY);
       }
     }
   }

@@ -157,6 +157,13 @@ function updateGridPreview() {
 		els.stats.className = "mt-1 text-red-600 font-bold";
 		return;
 	}
+	if (m < 10) {
+		els.stats.textContent = "Error: Minimum margin is 10mm for proper labeling.";
+		els.stats.className = "mt-1 text-red-600 font-bold";
+		// We don't return here to allow seeing the grid, but we will block export
+	} else {
+		els.stats.className = "mt-1 text-slate-700";
+	}
 	const cols = Math.ceil(svgWidthMM / usableW);
 	const rows = Math.ceil(svgHeightMM / usableH);
 	els.stats.textContent = `Real Size: ${Math.round(svgWidthMM)}mm x ${Math.round(svgHeightMM)}mm. Creates ${cols * rows} tiles (${rows} rows x ${cols} cols).`;
@@ -191,6 +198,11 @@ async function generatePDF() {
 		const pW = parseFloat(els.paperW.value);
 		const pH = parseFloat(els.paperH.value);
 		const m = parseFloat(els.margin.value);
+
+		if (m < 10) {
+			throw new Error("Margin must be at least 10mm.");
+		}
+
 		const options = {
 			svgText: currentSvgText,
 			paperWidth: pW,
