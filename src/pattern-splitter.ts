@@ -210,10 +210,12 @@ export async function generateTiledPDF(options: PatternSplitterOptions): Promise
 
       // --- SCALE VERIFICATION LINES (Corner Ruler) ---
       // Draw outside the dashed border, in the top-left physical margin
+      // Relative to the content box (margin) so it moves inwards if margin is increased.
       const verifyLen = 50; // 50mm = 5cm
-      // Place at (5mm, 5mm) from the physical page edge
-      const startX = 5;
-      const startY = 5;
+      const rulerOffset = 2; // Distance from the dashed border line
+
+      const startX = margin;
+      const startY = margin - rulerOffset;
 
       pdf.setDrawColor(0, 0, 0); // Black
       pdf.setLineWidth(0.2); // Thin precision line
@@ -225,19 +227,20 @@ export async function generateTiledPDF(options: PatternSplitterOptions): Promise
       pdf.line(startX + verifyLen, startY - 1.5, startX + verifyLen, startY + 1.5); // 5cm mark
 
       // Vertical Line (Side)
-      const vLineStartY = startY + 5;
-      pdf.line(startX, vLineStartY, startX, vLineStartY + verifyLen);
+      const vLineStartY = startY + rulerOffset;
+      const vLineStartX = startX - rulerOffset;
+      pdf.line(vLineStartX, vLineStartY, vLineStartX, vLineStartY + verifyLen);
       // Horizontal Ticks for Vertical Line
-      pdf.line(startX - 1.5, vLineStartY, startX + 1.5, vLineStartY); // 0 mark
-      pdf.line(startX - 1.5, vLineStartY + verifyLen, startX + 1.5, vLineStartY + verifyLen); // 5cm mark
+      pdf.line(vLineStartX - 1.5, vLineStartY, vLineStartX + 1.5, vLineStartY); // 0 mark
+      pdf.line(vLineStartX - 1.5, vLineStartY + verifyLen, vLineStartX + 1.5, vLineStartY + verifyLen); // 5cm mark
 
       // Text Labels
-      pdf.setFontSize(7);
+      pdf.setFontSize(6);
       pdf.setTextColor(50);
       // Horizontal Label
-      pdf.text("5cm", startX + 20, startY - 2);
+      pdf.text("5cm", startX + verifyLen + 1, startY + .5);
       // Vertical Label (Rotated 90 degrees)
-      pdf.text("5cm", startX - 2, vLineStartY + 35, { angle: 90 });
+      pdf.text("5cm", vLineStartX + .5, vLineStartY + verifyLen + 5, { angle: 90 });
 
       // --- DIAMOND ALIGNMENT MARKS ---
       // Helper function to draw diamond marks
@@ -381,11 +384,23 @@ export async function generateTiledPDF(options: PatternSplitterOptions): Promise
       const rightIconOffsetX = -20;      // Horizontal offset for right icon (relative to text)
       const rightIconOffsetY = -3;      // Vertical offset for right icon (relative to text)
 
+      // Top Side (0° rotation)
+      const topLabelOffsetX = 0;
+      const topLabelOffsetY = 0;
+      const topIconOffsetX = 0;
+      const topIconOffsetY = 0;
+
+      // Bottom Side (0° rotation)
+      const bottomLabelOffsetX = 0;
+      const bottomLabelOffsetY = 0;
+      const bottomIconOffsetX = 0;
+      const bottomIconOffsetY = 0;
+
       // Top
       if (borderInstr.top !== 'none') {
         // x = midW (Centered on diamond)
         // y = margin - dist (Above diamond)
-        drawLabelWithIcon(borderInstr.top, midW, margin - dist);
+        drawLabelWithIcon(borderInstr.top, midW + topLabelOffsetX, margin - dist + topLabelOffsetY, 0, topIconOffsetX, topIconOffsetY);
       }
 
       // Right
@@ -402,7 +417,7 @@ export async function generateTiledPDF(options: PatternSplitterOptions): Promise
         // x = midW (Centered on diamond)
         // y = bottomBorder + dist + textHeightAdjustment
         // Note: PDF text origin is baseline. We need to shift down by font height approx (2mm)
-        drawLabelWithIcon(borderInstr.bottom, midW, margin + usableH + dist + 2);
+        drawLabelWithIcon(borderInstr.bottom, midW + bottomLabelOffsetX, margin + usableH + dist + 2 + bottomLabelOffsetY, 0, bottomIconOffsetX, bottomIconOffsetY);
       }
 
       // Left
