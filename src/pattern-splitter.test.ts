@@ -269,8 +269,8 @@ describe('Pattern Splitter', () => {
 
             const textCalls = mocks.text.mock.calls.map(c => c[0]); // First arg is text
 
-            expect(textCalls).toContain('[glue]');
-            expect(textCalls).toContain('[cut out]');
+            expect(textCalls).toContain('[ GLUE ]');
+            expect(textCalls).toContain('[ CUT  OUT ]');
 
             // Should be present multiple times. 
             // 2x2 grid:
@@ -279,8 +279,8 @@ describe('Pattern Splitter', () => {
             // Top cut: Tile 2-1, Tile 2-2 (2 times)
             // Left cut: Tile 1-2, Tile 2-2 (2 times)
 
-            const glueCount = textCalls.filter(t => t === '[glue]').length;
-            const cutCount = textCalls.filter(t => t === '[cut out]').length;
+            const glueCount = textCalls.filter(t => t === '[ GLUE ]').length;
+            const cutCount = textCalls.filter(t => t === '[ CUT  OUT ]').length;
 
             expect(glueCount).toBeGreaterThanOrEqual(4);
             expect(cutCount).toBeGreaterThanOrEqual(4);
