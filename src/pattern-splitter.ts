@@ -208,6 +208,39 @@ export async function generateTiledPDF(options: PatternSplitterOptions): Promise
       pdf.setTextColor(150);
       pdf.text(`Tile: ${r + 1}-${c + 1}`, margin + 2, margin + 4);
 
+      // --- CORNER ALIGNMENT MARKS (Elongated Plus Icons) ---
+      // Centers are at the 4 corners of the content box.
+      // Elongated towards the paper edge (outside the box).
+      const cInner = 2; // Length inside the content box
+      const cOuter = 5; // Length outside the content box
+
+      pdf.setDrawColor(0, 0, 0);
+      pdf.setLineWidth(0.2); // Thin precision lines
+      pdf.setLineDashPattern([], 0); // Solid lines
+
+      // Helper to draw alignment cross
+      // isLeft: true if on left edge (elongate left), false if right (elongate right)
+      // isTop: true if on top edge (elongate up), false if bottom (elongate down)
+      const drawCornerMark = (cx: number, cy: number, isLeft: boolean, isTop: boolean) => {
+        // Horizontal Line
+        const xStart = isLeft ? cx - cOuter : cx - cInner;
+        const xEnd = isLeft ? cx + cInner : cx + cOuter;
+        pdf.line(xStart, cy, xEnd, cy);
+
+        // Vertical Line
+        const yStart = isTop ? cy - cOuter : cy - cInner;
+        const yEnd = isTop ? cy + cInner : cy + cOuter;
+        pdf.line(cx, yStart, cx, yEnd);
+      };
+
+      // Top-Left - not needed as the scale verification lines cover this area
+      // Top-Right
+      drawCornerMark(margin + usableW, margin, false, true);
+      // Bottom-Right
+      drawCornerMark(margin + usableW, margin + usableH, false, false);
+      // Bottom-Left
+      drawCornerMark(margin, margin + usableH, true, false);
+
       // --- SCALE VERIFICATION LINES (Corner Ruler) ---
       // Draw outside the dashed border, in the top-left physical margin
       // Relative to the content box (margin) so it moves inwards if margin is increased.
