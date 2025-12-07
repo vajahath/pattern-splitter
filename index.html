@@ -91,14 +91,20 @@
             class="bg-indigo-100 text-indigo-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
           Paper Settings
         </h2>
-        <div class="flex gap-2 mb-4" role="group" aria-label="Paper Presets">
+        <div class="flex gap-2 mb-4 flex-wrap" role="group" aria-label="Paper Presets">
           <button id="presetA4"
-            class="flex-1 py-1.5 px-2 bg-slate-50 hover:bg-slate-100 text-xs font-medium rounded border border-slate-200 transition-colors">A4</button>
-          <button id="presetLetter"
-            class="flex-1 py-1.5 px-2 bg-slate-50 hover:bg-slate-100 text-xs font-medium rounded border border-slate-200 transition-colors">US
-            Letter</button>
+            class="flex-1 py-1.5 px-2 bg-slate-50 hover:bg-slate-100 text-xs font-medium rounded border border-slate-200 transition-colors cursor-pointer active:scale-95">A4</button>
+          <button id="presetA3"
+            class="flex-1 py-1.5 px-2 bg-slate-50 hover:bg-slate-100 text-xs font-medium rounded border border-slate-200 transition-colors cursor-pointer active:scale-95">A3</button>
+          <button id="presetA2"
+            class="flex-1 py-1.5 px-2 bg-slate-50 hover:bg-slate-100 text-xs font-medium rounded border border-slate-200 transition-colors cursor-pointer active:scale-95">A2</button>
+          <button id="presetA1"
+            class="flex-1 py-1.5 px-2 bg-slate-50 hover:bg-slate-100 text-xs font-medium rounded border border-slate-200 transition-colors cursor-pointer active:scale-95">A1</button>
           <button id="presetA0"
-            class="flex-1 py-1.5 px-2 bg-slate-50 hover:bg-slate-100 text-xs font-medium rounded border border-slate-200 transition-colors">A0</button>
+            class="flex-1 py-1.5 px-2 bg-slate-50 hover:bg-slate-100 text-xs font-medium rounded border border-slate-200 transition-colors cursor-pointer active:scale-95">A0</button>
+          <div id="presetCustom"
+            class="flex-1 py-1.5 px-2 bg-slate-50 text-slate-400 text-xs font-medium rounded border border-slate-200 transition-colors text-center select-none"
+            aria-disabled="true">Custom</div>
         </div>
         <div class="grid grid-cols-2 gap-4 mb-4">
           <div>
@@ -140,7 +146,7 @@
           <p id="progressText" class="text-xs text-center mt-1 text-slate-500">Initializing...</p>
         </div>
         <button id="btnExport" disabled
-          class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded shadow-md transition-all active:transform active:scale-95 flex justify-center items-center gap-2">
+          class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed cursor-pointer text-white font-bold rounded shadow-md transition-all active:transform active:scale-95 flex justify-center items-center gap-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
@@ -166,8 +172,8 @@
         </h2>
         <div
           class="text-xs text-slate-500 flex items-center gap-3 bg-slate-50 px-2 py-1 rounded border border-slate-200">
-          <span id="previewInfo" class="w-12 text-right font-mono font-medium">100%</span>
-          <div class="flex gap-1">
+          <span id="previewInfo" class="w-20 text-right font-mono font-medium">Zoom: 100%</span>
+          <div class="hidden gap-1">
             <button id="zoomIn"
               class="w-6 h-6 flex items-center justify-center bg-white border rounded hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
               aria-label="Zoom In">+</button>
