@@ -16,6 +16,15 @@ let originalDisplayH = 0;
 
 
 
+// --- Constants ---
+const PAPER_SIZES: Record<string, [number, number]> = {
+	'a4': [210, 297],
+	'a3': [297, 420],
+	'a2': [420, 594],
+	'a1': [594, 841],
+	'a0': [841, 1189]
+};
+
 // --- DOM Elements ---
 const els = {
 	input: document.getElementById('fileInput') as HTMLInputElement,
@@ -35,32 +44,83 @@ const els = {
 	fileInfo: document.getElementById('fileInfo')!,
 	fileName: document.getElementById('fileName')!,
 	clearFileBtn: document.getElementById('clearFileBtn') as HTMLButtonElement,
-	presetA4: document.getElementById('presetA4') as HTMLButtonElement,
-	presetLetter: document.getElementById('presetLetter') as HTMLButtonElement,
-	presetA0: document.getElementById('presetA0') as HTMLButtonElement,
+	presetA4: document.getElementById('presetA4') as HTMLElement,
+	presetA3: document.getElementById('presetA3') as HTMLElement,
+	presetA2: document.getElementById('presetA2') as HTMLElement,
+	presetA1: document.getElementById('presetA1') as HTMLElement,
+	presetA0: document.getElementById('presetA0') as HTMLElement,
+	presetCustom: document.getElementById('presetCustom') as HTMLElement,
 	zoomIn: document.getElementById('zoomIn') as HTMLButtonElement,
 	zoomOut: document.getElementById('zoomOut') as HTMLButtonElement,
 };
 
 // --- Event Listeners ---
 els.input.addEventListener('change', handleFileUpload);
-[els.paperW, els.paperH, els.margin].forEach(el => {
-	el.addEventListener('input', updateGridPreview);
+[els.paperW, els.paperH].forEach(el => {
+	el.addEventListener('input', () => {
+		checkPreset();
+		updateGridPreview();
+	});
 });
+els.margin.addEventListener('input', updateGridPreview);
+
 els.clearFileBtn.addEventListener('click', clearFile);
 els.presetA4.addEventListener('click', () => setPreset('a4'));
-els.presetLetter.addEventListener('click', () => setPreset('letter'));
+els.presetA3.addEventListener('click', () => setPreset('a3'));
+els.presetA2.addEventListener('click', () => setPreset('a2'));
+els.presetA1.addEventListener('click', () => setPreset('a1'));
 els.presetA0.addEventListener('click', () => setPreset('a0'));
 els.zoomIn.addEventListener('click', () => zoomPreview(0.1));
 els.zoomOut.addEventListener('click', () => zoomPreview(-0.1));
 els.btnExport.addEventListener('click', generatePDF);
 
 // --- Core Logic ---
-function setPreset(type: 'a4' | 'letter' | 'a0') {
-	if (type === 'a4') { els.paperW.value = '210'; els.paperH.value = '297'; }
-	if (type === 'letter') { els.paperW.value = '215.9'; els.paperH.value = '279.4'; }
-	if (type === 'a0') { els.paperW.value = '841'; els.paperH.value = '1189'; }
+function setPreset(type: keyof typeof PAPER_SIZES) {
+	const size = PAPER_SIZES[type];
+	if (!size) return;
+	els.paperW.value = size[0].toString();
+	els.paperH.value = size[1].toString();
+	highlightPreset(type);
 	updateGridPreview();
+}
+
+function checkPreset() {
+	const w = parseFloat(els.paperW.value);
+	const h = parseFloat(els.paperH.value);
+	let match: string | null = null;
+	for (const [key, size] of Object.entries(PAPER_SIZES)) {
+		// allow small float diff? inputs are normally integers or 1 dec
+		if (Math.abs(size[0] - w) < 0.1 && Math.abs(size[1] - h) < 0.1) {
+			match = key;
+			break;
+		}
+	}
+	highlightPreset(match);
+}
+
+function highlightPreset(type: string | null) {
+	// Reset all
+	const ALL_PRESETS = [els.presetA4, els.presetA3, els.presetA2, els.presetA1, els.presetA0];
+	ALL_PRESETS.forEach(btn => {
+		btn.classList.remove('bg-indigo-100', 'border-indigo-500', 'text-indigo-700', 'ring-1', 'ring-indigo-500');
+		btn.classList.add('bg-slate-50', 'border-slate-200');
+	});
+	// Reset Custom
+	els.presetCustom.classList.remove('bg-indigo-100', 'border-indigo-500', 'text-indigo-700', 'ring-1', 'ring-indigo-500');
+	els.presetCustom.classList.add('bg-slate-50', 'text-slate-400');
+
+	if (type && PAPER_SIZES[type]) {
+		// Active standard
+		const btn = els[`preset${type.toUpperCase()}` as keyof typeof els] as HTMLElement;
+		if (btn) {
+			btn.classList.remove('bg-slate-50', 'border-slate-200');
+			btn.classList.add('bg-indigo-100', 'border-indigo-500', 'text-indigo-700', 'ring-1', 'ring-indigo-500');
+		}
+	} else {
+		// Custom
+		els.presetCustom.classList.remove('bg-slate-50', 'text-slate-400');
+		els.presetCustom.classList.add('bg-indigo-100', 'border-indigo-500', 'text-indigo-700', 'ring-1', 'ring-indigo-500');
+	}
 }
 
 function zoomPreview(delta: number) {
@@ -76,7 +136,7 @@ function updatePreviewDimensions() {
 	const scaledH = originalDisplayH * previewScale;
 	els.wrapper.style.width = `${scaledW}px`;
 	els.wrapper.style.height = `${scaledH}px`;
-	els.pInfo.textContent = `${Math.round(previewScale * 100)}%`;
+	els.pInfo.textContent = `Zoom: ${Math.round(previewScale * 100)}%`;
 }
 
 function clearFile() {
@@ -157,6 +217,13 @@ function updateGridPreview() {
 		els.stats.className = "mt-1 text-red-600 font-bold";
 		return;
 	}
+	if (m < 10) {
+		els.stats.textContent = "Error: Minimum margin is 10mm for proper labeling.";
+		els.stats.className = "mt-1 text-red-600 font-bold";
+		// We don't return here to allow seeing the grid, but we will block export
+	} else {
+		els.stats.className = "mt-1 text-slate-700";
+	}
 	const cols = Math.ceil(svgWidthMM / usableW);
 	const rows = Math.ceil(svgHeightMM / usableH);
 	els.stats.textContent = `Real Size: ${Math.round(svgWidthMM)}mm x ${Math.round(svgHeightMM)}mm. Creates ${cols * rows} tiles (${rows} rows x ${cols} cols).`;
@@ -191,6 +258,11 @@ async function generatePDF() {
 		const pW = parseFloat(els.paperW.value);
 		const pH = parseFloat(els.paperH.value);
 		const m = parseFloat(els.margin.value);
+
+		if (m < 10) {
+			throw new Error("Margin must be at least 10mm.");
+		}
+
 		const options = {
 			svgText: currentSvgText,
 			paperWidth: pW,
@@ -228,3 +300,7 @@ async function generatePDF() {
 		els.btnExport.disabled = false;
 	}
 }
+
+// Initialize UI
+setPreset('a4');
+
