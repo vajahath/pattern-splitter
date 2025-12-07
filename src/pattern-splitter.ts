@@ -206,7 +206,7 @@ export async function generateTiledPDF(options: PatternSplitterOptions): Promise
       pdf.setLineDashPattern([], 0);
       pdf.setFontSize(8);
       pdf.setTextColor(150);
-      pdf.text(`Tile: ${r + 1}-${c + 1}`, margin + 2, margin + 4);
+      pdf.text(`Top | Tile: ${r + 1}-${c + 1}`, margin + 2, margin + 4);
 
       // --- CORNER ALIGNMENT MARKS (Elongated Plus Icons) ---
       // Centers are at the 4 corners of the content box.
