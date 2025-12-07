@@ -373,14 +373,14 @@ export async function generateTiledPDF(options: PatternSplitterOptions): Promise
 
       // MANUAL ADJUSTMENT VARIABLES - Adjust these to fine-tune left/right label positions
       // Left Side (90° rotation)
-      const leftLabelOffsetX = 7;  // Horizontal offset for left label position
-      const leftLabelOffsetY = 7;    // Vertical offset for left label position
+      const leftLabelOffsetX = 10;  // Horizontal offset for left label position
+      const leftLabelOffsetY = 25;    // Vertical offset for left label position
       const leftIconOffsetX = -28;     // Horizontal offset for left icon (relative to text)
       const leftIconOffsetY = 9;     // Vertical offset for left icon (relative to text)
 
       // Right Side (270° rotation)
-      const rightLabelOffsetX = 5.5; // Horizontal offset for right label position
-      const rightLabelOffsetY = -5;     // Vertical offset for right label position
+      const rightLabelOffsetX = 2.5; // Horizontal offset for right label position
+      const rightLabelOffsetY = -20;     // Vertical offset for right label position
       const rightIconOffsetX = -20;      // Horizontal offset for right icon (relative to text)
       const rightIconOffsetY = -3;      // Vertical offset for right icon (relative to text)
 
