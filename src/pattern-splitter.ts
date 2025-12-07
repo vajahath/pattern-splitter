@@ -385,14 +385,14 @@ export async function generateTiledPDF(options: PatternSplitterOptions): Promise
       const rightIconOffsetY = -3;      // Vertical offset for right icon (relative to text)
 
       // Top Side (0° rotation)
-      const topLabelOffsetX = 0;
-      const topLabelOffsetY = 0;
+      const topLabelOffsetX = 14;
+      const topLabelOffsetY = 2.5;
       const topIconOffsetX = 0;
       const topIconOffsetY = 0;
 
       // Bottom Side (0° rotation)
-      const bottomLabelOffsetX = 0;
-      const bottomLabelOffsetY = 0;
+      const bottomLabelOffsetX = -17;
+      const bottomLabelOffsetY = -2.5;
       const bottomIconOffsetX = 0;
       const bottomIconOffsetY = 0;
 
